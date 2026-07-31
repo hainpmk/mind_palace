@@ -1,0 +1,67 @@
+[
+  {
+    "access": "Allow",
+    "destinationAddressPrefix": "*",
+    "destinationAddressPrefixes": [],
+    "destinationPortRange": "22",
+    "destinationPortRanges": [],
+    "direction": "Inbound",
+    "etag": "W/\"d60f3f3e-0528-4bb4-92ef-66b09800f988\"",
+    "id": "/subscriptions/9bd27d7f-5caf-4d90-8426-f2d6d076eceb/resourceGroups/VMs/providers/Microsoft.Network/networkSecurityGroups/vm-mongo-masterNSG/securityRules/default-allow-ssh",
+    "name": "default-allow-ssh",
+    "priority": 1000,
+    "protocol": "TCP",
+    "provisioningState": "Succeeded",
+    "resourceGroup": "VMs",
+    "sourceAddressPrefixes": [
+      "113.190.232.224",
+      "20.195.10.11",
+      "14.232.245.96"
+    ],
+    "sourcePortRange": "*",
+    "sourcePortRanges": [],
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules"
+  },
+  {
+    "access": "Allow",
+    "destinationAddressPrefix": "*",
+    "destinationAddressPrefixes": [],
+    "destinationPortRange": "27017",
+    "destinationPortRanges": [],
+    "direction": "Inbound",
+    "etag": "W/\"d60f3f3e-0528-4bb4-92ef-66b09800f988\"",
+    "id": "/subscriptions/9bd27d7f-5caf-4d90-8426-f2d6d076eceb/resourceGroups/VMs/providers/Microsoft.Network/networkSecurityGroups/vm-mongo-masterNSG/securityRules/AllowAnyMongoDBInbound",
+    "name": "AllowAnyMongoDBInbound",
+    "priority": 1010,
+    "protocol": "TCP",
+    "provisioningState": "Succeeded",
+    "resourceGroup": "VMs",
+    "sourceAddressPrefix": "*",
+    "sourceAddressPrefixes": [],
+    "sourcePortRange": "*",
+    "sourcePortRanges": [],
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules"
+  },
+  {
+    "access": "Allow",
+    "destinationAddressPrefix": "*",
+    "destinationAddressPrefixes": [],
+    "destinationPortRange": "9100",
+    "destinationPortRanges": [],
+    "direction": "Inbound",
+    "etag": "W/\"d60f3f3e-0528-4bb4-92ef-66b09800f988\"",
+    "id": "/subscriptions/9bd27d7f-5caf-4d90-8426-f2d6d076eceb/resourceGroups/VMs/providers/Microsoft.Network/networkSecurityGroups/vm-mongo-masterNSG/securityRules/NodeExporter",
+    "name": "NodeExporter",
+    "priority": 1020,
+    "protocol": "*",
+    "provisioningState": "Succeeded",
+    "resourceGroup": "VMs",
+    "sourceAddressPrefixes": [
+      "113.190.232.224",
+      "20.195.10.11"
+    ],
+    "sourcePortRange": "*",
+    "sourcePortRanges": [],
+    "type": "Microsoft.Network/networkSecurityGroups/securityRules"
+  }
+]
