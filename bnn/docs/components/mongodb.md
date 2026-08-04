@@ -7,8 +7,8 @@
 - **Owner/contact**: TBD
 - **Dependencies**: see "Confirmed consumers" below — both the live `monkey-eks` (AWS) and nonprod `onepercent-aks-v2` (Azure) clusters connect to this instance
 - **MongoDB version**: 5.0.26 — **EOL** (MongoDB 5.0 reached end of life October 2024; no more security patches). Combined with the open-to-internet port 27017, this is a real exposure, not just a hygiene issue.
-- **Service dependency map**: [mongodb-service-dependencies-2026-07-30.json](../components-raw/mongodb-service-dependencies-2026-07-30.json) — graph-ready (nodes/edges) extraction of every service confirmed connecting to each of the four Mongo instances, for later dependency-graphing.
-- **Migration plan**: [vm-mongo-master-migration-plan.md](vm-mongo-master-migration-plan.md) — lift-and-shift to self-managed EC2 (Option B: single-node replica set → add AWS member → failover), same MongoDB version on the AWS target for this first move, action plan and open items tracked there.
+- **Service dependency map**: [mongodb-service-dependencies-2026-08-04.json](../components-raw/mongodb-service-dependencies-2026-08-04.json) — graph-ready (nodes/edges) extraction of every service confirmed connecting to each backend instance, updated with post-migration discoveries; temporary/working artifact, not yet a final authoritative graph.
+- **Migration**: complete, cutover 2026-08-03 — see [vm-mongo-master-migration-postmortem.md](vm-mongo-master-migration-postmortem.md) for the full history and [iac-terraform-notes.md](iac-terraform-notes.md) for ongoing Terraform/CI context on the resulting AWS infra.
 - **Open questions**:
   - **No tags set** on the VM (empty `tags: {}`) — no owner/env/cost-center metadata at all
   - No replication = no built-in HA/failover today — resolved as part of the migration plan (becomes a real replica set)
