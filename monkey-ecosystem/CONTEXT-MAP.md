@@ -35,8 +35,8 @@ across services. Boundaries sharpen as each repo gets its own `CONTEXT.md`.
 |---|---|---|
 | `edu_app` | confirmed | Manages user account information within the Monkey ecosystem (register/login/profile/license/orders). Named as the account hub. |
 | `edu_device` | confirmed | **Confirmed: exactly 2 contexts bundled in one repo, historical not principled** (confirmed by user; full controller/model survey done). (1) **Device Identity & Local State** — device fingerprint, geo/IP/timezone, pre-login coins wallet, FCM push, "convert device to account" (device→account linking, mirrors `edu_app`'s Merge Account). (2) **In-App Purchase & Payment Verification** — Apple/Google StoreKit receipt verification, refunds, subscriptions, exchange rates, promo-offer signing, purchase event/audit logs. Named connection to MJ; called from `edu_app` via `DeviceConnectService`. |
-| `edu_app_platform_go` | confirmed | `edu_app_platform` — purpose undocumented (empty README). Named connection to MJ. |
-| `edu_app_v2` | unconfirmed | "service app ver 2 for optimize load" — REST API, Lumen. Possibly a v2 of `edu_app`. |
+| `edu_app_platform_go` | confirmed | Go service for the content-catalog/"Platform" domain (lesson/game/word/worksheet/story/activity — matches `edu_app_v2`'s `Platform/*` namespace and `edu_lesson`). Also actively growing a new capability: AI-generated story content (Gemini/OpenAI provider-agnostic, per `docs/superpowers/specs/2026-06-12-story-ai-multi-provider-design.md`) — not just a legacy rewrite. DB connection not confirmed from committed config (env-injected). Named connection to MJ. |
+| `edu_app_v2` | confirmed | **Not a "v2" successor — a live, actively-committed monolith sharing the SAME databases** (`edu_app`, `edu_device`, `edu_global`, `edu_platform`, `edu_story` — confirmed via `config/database.php` connection names) as the split-out `edu_app`/`edu_device`/`edu_story`/etc. microservices. Bundles `Story`/`Device`/`Award`/`Crm`/`Platform` namespaces all in one repo — looks like the original monolith these were later split from, but the split was never fully cut over: both read/write the same tables concurrently, not just call each other over HTTP. Last commit 2026-07-20, not frozen. |
 | `edu_app_story_go` | unconfirmed | Purpose undocumented (empty README); name suggests Monkey Stories tie-in. |
 | `edu_app_tini` | unconfirmed | "Mini App Monkey Tiki" — unclear relation to Monkey Junior line. |
 | `edu_agent_app` | unconfirmed | Node.js project, purpose undocumented beyond prerequisites. |
@@ -140,6 +140,15 @@ rest of the ecosystem is unconfirmed.
 | `python_convert_bundle` | confirmed | Tool to package learning materials — likely cross-product (not tied to one product line). |
 
 ## Open questions
+
+- **The "one context = one repo" starting assumption is confirmed broken for
+  at least one pair.** `edu_app_v2` shares its actual database tables
+  (`edu_app`, `edu_device`, `edu_global`, `edu_platform`, `edu_story`) with
+  `edu_app`/`edu_device`/etc. — both are live, both actively committed to.
+  Any repo pair sharing a DB-name prefix (`edu_app*`, `mk_classroom*`/
+  `mk_classroom_go`, `mk_course*`/`mk_course_go`) should be treated as
+  suspect for the same pattern until checked, not assumed to be sequential
+  versions.
 
 - ~~How do `mk_*` and `hoc10-*` relate to the `edu_*` (Monkey Junior) line?~~
   Resolved for `mk_*`: Monkey Class is a preschool management solution; Monkey
