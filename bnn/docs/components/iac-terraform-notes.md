@@ -65,10 +65,7 @@ Opening the first real PR against `envs/prod`/`modules/**` (the mongo private-DN
 
 **How these got applied**: none of them could be applied via CI, by construction — the very role being fixed can't assume itself to fix itself. The break-glass role (`docs/adr/0004-terraform-ops-flow.md`) was the obvious next path, but turned out to have **no IAM permissions at all** for `ci-role`/`break-glass-role` themselves (its `iam_for_ssm_roles` policy is scoped only to the `*-ssm` instance-role naming pattern used by `mongodb`/`bastion`, not to these roles). Applied directly with an MFA-authenticated session under a devops engineer's own IAM user instead (satisfies the break-glass role's own `aws:MultiFactorAuthPresent` condition, just without needing to actually assume that specific role).
 
-**Immediately after the OIDC layer started working, two more real bugs surfaced in the same pass**, both root-caused by never having a working baseline to test against before:
-
-- **Plan role had no DynamoDB permissions at all**, and `terraform plan` acquires the state lock by default even though it never writes state. Fixed by adding `-lock=false` to `prod-plan.yml`'s plan step, rather than widening the read-only role to cover locking.
-- **`terraform plan`/`apply` had no way to supply the three no-default variables** (`mongodb_keyfile_content`, `break_glass_principal_arns`, `break_glass_notification_emails`) — no GitHub repo secrets/variables existed, and the workflow had no `-input=false`, so once the OIDC and lock issues were fixed, the very next run hung for **4.5 hours** prompting on stdin for a value a non-interactive runner can never provide. See the new SSM section below for the fix to the keyfile specifically; `break_glass_principal_arns`/`break_glass_notification_emails` still need an equivalent (they're not secret, just deliberately no-defaulted — GitHub Actions repo *variables* would suffice, not secrets).
+**Immediately after the OIDC layer started working, one more real bug surfaced in the same pass**, root-caused by never having a working baseline to test against before: the plan role had no DynamoDB permissions at all, and `terraform plan` acquires the state lock by default even though it never writes state. Fixed by adding `-lock=false` to `prod-plan.yml`'s plan step, rather than widening the read-only role to cover locking.
 
 **Net effect**: this repo's CI had never successfully planned or applied anything, end to end, at any point before 2026-08-11 — every prior apply (state reconciliation, the mongo migration infra itself) went through local admin credentials or manual `terraform apply`, never through `prod-plan.yml`/`prod-apply.yml` as designed. Worth re-reading `docs/adr/0004-terraform-ops-flow.md` with this in mind — the two-phase design was sound, but had never actually been exercised.
 
@@ -80,7 +77,7 @@ Currently every connection string (and this migration's own tooling) references 
 
 ## Manual step required: mongo replica-set keyfile lives in SSM, not Terraform
 
-`envs/prod` reads the mongo replica-set internal-auth keyfile from SSM Parameter Store (`/mongo/prod/keyfile`, `SecureString`, default `alias/aws/ssm` key) via a `data "aws_ssm_parameter"` source, not a bare Terraform variable — the old `mongodb_keyfile_content` variable had no default (correctly, since it's a live secret) and CI had no way to supply it at all, which is what caused `prod-plan.yml` to hang for 4.5 hours the first time the OIDC layer actually worked (see the CI reconciliation section below).
+`envs/prod` reads the mongo replica-set internal-auth keyfile from SSM Parameter Store (`/mongo/prod/keyfile`, `SecureString`, default `alias/aws/ssm` key) via a `data "aws_ssm_parameter"` source, not a bare Terraform variable — the old `mongodb_keyfile_content` variable had no default (correctly, since it's a live secret) and CI had no way to supply it at all.
 
 **The parameter itself is created/updated manually** (`aws ssm put-parameter --name /mongo/prod/keyfile --type SecureString --overwrite`), not Terraform-managed. If the keyfile ever needs rotating, that command is the only place to do it — Terraform will never see or diff this value.
 
@@ -94,5 +91,6 @@ Currently every connection string (and this migration's own tooling) references 
 - Set up TLS in transit if a cross-cloud replication pattern recurs for the deferred `vm-core-database` migration.
 - Consider whether to rename the replica set from `atlas-um8iyc-shard-0` to something reflecting current reality — cosmetic, not urgent.
 - Turn `/mongo/prod/keyfile`'s SSM parameter into a real Terraform resource (placeholder value + `lifecycle { ignore_changes = [value] }`) instead of a manually-created, Terraform-invisible one — see the SSM section above.
-- Supply `break_glass_principal_arns`/`break_glass_notification_emails` to CI too — not secret (an IAM ARN, an email address), just deliberately no-defaulted, but CI still has no source for them. GitHub Actions repo *variables* (not secrets) would suffice.
 - Wire the new `mongodb-prod.monkeyuni.net` private zone into actual connection strings — see the DNS section above.
+
+**Done since first written**: `break_glass_principal_arns`/`break_glass_notification_emails` are now supplied to CI via GitHub Actions repo variables (`BREAK_GLASS_PRINCIPAL_ARNS`/`BREAK_GLASS_NOTIFICATION_EMAILS`, injected as `TF_VAR_*`) — see the OIDC bug-chain section above, which also covers the `-input=false`/`-lock=false` and IAM/SNS/EventBridge/Route53 permission fixes that came out of actually getting `prod-plan.yml`/`prod-apply.yml` to work end to end.
