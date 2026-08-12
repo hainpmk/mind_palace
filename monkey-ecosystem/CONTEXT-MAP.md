@@ -84,8 +84,17 @@ across services. Boundaries sharpen as each repo gets its own `CONTEXT.md`.
 
 Monkey Class is a management solution for preschools; Monkey Kindy is a preschool
 English programme offered either inside Monkey Class or inside the Monkey Junior
-super-app. Confirmed connection: `mk_user`'s `students` table links to `edu_app`'s
-`profile` table (type `LMS`/`LMS_TEACHER`) — see `edu_app/CONTEXT.md` → **MX↔LMS Sync**.
+super-app. Confirmed connections: (1) `mk_user`'s `students` table links to
+`edu_app`'s `profile` table (type `LMS`/`LMS_TEACHER`) — see `edu_app/CONTEXT.md`
+→ **MX↔LMS Sync**. (2) `edu_app`'s `PromotionController::addGiftMClass` grants a
+free 1-month MJ package as a Monkey Class cross-sell gift — see `edu_app/CONTEXT.md`
+→ **"Promotion"/"Gift"**. (3) `edu_app`'s `NotificationController::challengeMC`
+surfaces Monkey Class "challenge" notifications per Profile — see
+`edu_app/CONTEXT.md` → **Challenge (MC)**. (4) `edu_app`'s
+`TicketController::sendTicket` (misleadingly named — a CRM sales-outreach
+trigger, not support) flags paying MJ customers not yet linked to a "Monkey
+School" for cross-sell outreach into Monkey Class — see `edu_app/CONTEXT.md`
+→ **Ticket**.
 
 | Repo | Status | Purpose (guessed) |
 |---|---|---|
