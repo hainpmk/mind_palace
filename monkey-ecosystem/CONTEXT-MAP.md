@@ -164,6 +164,36 @@ ecosystem looked like before the split, never migrated forward since.
   static Helm config — not yet done for the `edu_platform`/`edu_platform_go`
   or `edu_story`/`edu_story_go` pairs (both confirmed running simultaneously
   in the `app` namespace, same dual-live risk as `edu_app_v2`).
+
+- **CONFIRMED 2026-08-13 — the shared gateway ingress proves this is the
+  live shape for THREE pairs simultaneously, not just `edu_app`/`edu_app_v2`.**
+  `infra_edu_app_platform_go`'s ingress (`eks_live`) is not scoped to its own
+  service — it's the shared path-based ingress for the whole `app` k8s
+  namespace, exposing old and new implementations side-by-side under ONE
+  domain, selected purely by which path prefix each caller happens to use
+  (client-chosen, not server-redirected):
+  - `/app` → `mx-edu-app` (new) **and** `/appv2` → `edu-app-v2` (old)
+  - `/platform` → `edu-platform` (old) **and** `/platformgo` → `edu-platform-go` (new)
+  - `/story` → `edu-story` (old) **and** `/storygo` → `edu-story-go` (new)
+  - Single, unpaired: `/device`, `/award`, `/lesson`, `/product`, `/cms`,
+    `/report`, `/segment`, `/ai`, `/dialogue`.
+
+  This is exactly the worst-case pattern flagged by the user: same domain,
+  same underlying data (`edu_app`/`edu_app_v2` confirmed sharing DB tables —
+  see above), live traffic split by caller choice, not consolidated. At
+  least one concrete overlapping duplicate confirmed in code: `edu_app` has
+  its own `get-user-by-phone` route (`UserController@getUser`,
+  `routes/api.php:7`) identical in name to the one being hit continuously on
+  `edu_app_v2` — but `edu_app`'s copy showed zero hits in its own live pod
+  logs in the sampled window, meaning traffic hasn't actually split for
+  *this* route yet (code duplicated, cutover not done) rather than
+  currently serving simultaneously. Whether other routes across the three
+  pairs are truly split-serving (not just duplicated-but-dormant) is not
+  yet checked per-route.
+  - **Confirmed live caller still pointed at `edu_app_v2` directly**:
+    `edu_lms_frontend`'s Tutoring production env —
+    `REACT_APP_API_URL_APP_2=https://apii.monkeyuni.net/api/`
+    (`.env.tutoring.production`).
 - **The "one context = one repo" starting assumption is confirmed broken for
   at least one pair.** `edu_app_v2` shares its actual database tables
   (`edu_app`, `edu_device`, `edu_global`, `edu_platform`, `edu_story`) with
@@ -191,6 +221,12 @@ ecosystem looked like before the split, never migrated forward since.
   and version pairs (`edu_app`/`edu_app_v2`, `edu_cms_frontend`/
   `edu_cms_frontend_yolo`) — likely old-stack/rewrite relationships, not
   yet confirmed which is live.
+
+## Target architecture
+
+See [`docs/adr/0001-target-architecture-for-migration.md`](./docs/adr/0001-target-architecture-for-migration.md)
+for the decided direction (Go over PHP, isolated data stores, no dual-write,
+lean EDA/event-sourcing) — for later planning, not yet a plan or timeline.
 
 ## Next step
 
