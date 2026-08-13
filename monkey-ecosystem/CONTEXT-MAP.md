@@ -36,7 +36,7 @@ across services. Boundaries sharpen as each repo gets its own `CONTEXT.md`.
 | `edu_app` | confirmed | Manages user account information within the Monkey ecosystem (register/login/profile/license/orders). Named as the account hub. |
 | `edu_device` | confirmed | **Confirmed: exactly 2 contexts bundled in one repo, historical not principled** (confirmed by user; full controller/model survey done). (1) **Device Identity & Local State** — device fingerprint, geo/IP/timezone, pre-login coins wallet, FCM push, "convert device to account" (device→account linking, mirrors `edu_app`'s Merge Account). (2) **In-App Purchase & Payment Verification** — Apple/Google StoreKit receipt verification, refunds, subscriptions, exchange rates, promo-offer signing, purchase event/audit logs. Named connection to MJ; called from `edu_app` via `DeviceConnectService`. |
 | `edu_app_platform_go` | confirmed | Go service for the content-catalog/"Platform" domain (lesson/game/word/worksheet/story/activity — matches `edu_app_v2`'s `Platform/*` namespace and `edu_lesson`). Also actively growing a new capability: AI-generated story content (Gemini/OpenAI provider-agnostic, per `docs/superpowers/specs/2026-06-12-story-ai-multi-provider-design.md`) — not just a legacy rewrite. DB connection not confirmed from committed config (env-injected). Named connection to MJ. |
-| `edu_app_v2` | confirmed | **Not a "v2" successor — a live, actively-committed monolith sharing the SAME databases** (`edu_app`, `edu_device`, `edu_global`, `edu_platform`, `edu_story` — confirmed via `config/database.php` connection names) as the split-out `edu_app`/`edu_device`/`edu_story`/etc. microservices. Bundles `Story`/`Device`/`Award`/`Crm`/`Platform` namespaces all in one repo — looks like the original monolith these were later split from, but the split was never fully cut over: both read/write the same tables concurrently, not just call each other over HTTP. Last commit 2026-07-20, not frozen. |
+| `edu_app_v2` | confirmed | **Not a "v2" successor — a live, actively-committed monolith sharing the SAME databases** (`edu_app`, `edu_device`, `edu_global`, `edu_platform`, `edu_story` — confirmed via `config/database.php` connection names) as the split-out `edu_app`/`edu_device`/`edu_story`/etc. microservices. Bundles `Story`/`Device`/`Award`/`Crm`/`Platform` namespaces all in one repo — looks like the original monolith these were later split from, but the split was never fully cut over: both read/write the same tables concurrently, not just call each other over HTTP. Last commit 2026-07-20, not frozen. **Confirmed via live cluster (`monkey-eks`, `eks_live` infra branch) + Datadog: genuinely hot in production**, not low-priority — HPA min 1/max 5 (autoscaled), real prod ingress hosts (`apii.monkeyuni.net`), and live pod logs show constant internal server-to-server traffic (`/api/get-user-by-phone`), active `crm.monkey.edu.vn` admin-tool usage (`/api/user-account/*`), and **live Hoc10 login traffic** (`hoc10.vn` → `/api/v1/login-for-book?app_id=68`) — directly confirming the previously-unconfirmed Hoc10↔ecosystem connection below. See migration-status note in Open Questions for the correction history (an earlier read was on the wrong infra branch/cloud and got this backwards). |
 | `edu_app_story_go` | unconfirmed | Purpose undocumented (empty README); name suggests Monkey Stories tie-in. |
 | `edu_app_tini` | unconfirmed | "Mini App Monkey Tiki" — unclear relation to Monkey Junior line. |
 | `edu_agent_app` | unconfirmed | Node.js project, purpose undocumented beyond prerequisites. |
@@ -113,11 +113,15 @@ like plain-stack + Go-rewrite pairs, mirroring the same pattern as
 `edu_app`/`edu_app_v2`. Not merged in this table — worth confirming during
 grilling.
 
-## `hoc10-*` line — Hoc10, discontinued but still running (relation to rest of ecosystem unknown)
+## `hoc10-*` line — Hoc10, discontinued but still running (confirmed connection to edu_app_v2)
 
 Electronic version of the "Kite textbook" plus add-ons. No code reference to
-`edu_app` (or any other `edu_*`/`mk_*` repo) found — relation, if any, to the
-rest of the ecosystem is unconfirmed.
+`edu_app` (the current split repo) found, BUT **confirmed live**: `hoc10.vn`/
+`www.hoc10.vn` actively call `edu_app_v2`'s `/api/v1/login-for-book?app_id=68`
+(`APP_ID_E_LEARNING`) for login, observed directly in live pod logs
+(2026-08-13). So Hoc10 depends on the old monolith (`edu_app_v2`), not the
+new split `edu_app` — consistent with it being frozen at whatever the
+ecosystem looked like before the split, never migrated forward since.
 
 | Repo | Status | Purpose (guessed) |
 |---|---|---|
@@ -141,6 +145,25 @@ rest of the ecosystem is unconfirmed.
 
 ## Open questions
 
+- **CORRECTED 2026-08-13 — Helm `values.yaml` alone is not trustworthy
+  evidence for traffic/importance; verify against the live cluster.** An
+  earlier version of this note claimed `edu_app_v2` was pinned to 1 pod and
+  low-traffic based on `infra_edu_app_v2`'s checked-out branch — but that
+  repo was on `aks_dev` (wrong cloud, wrong environment), not `eks_live`.
+  Multiple `infra_*` repos default to non-live branches per-repo
+  inconsistently (`infra_edu_app` was on `eks_live`, `infra_edu_device` was
+  on `gke_live`, `infra_edu_app_v2` was on `aks_dev`) — **always check
+  `git branch --show-current` and switch to `eks_live` before reading
+  `infra_*` Helm values for this cluster.** On the correct branch, plus live
+  `kubectl logs`/Datadog verification against the `monkey-eks` cluster:
+  `edu_app_v2` is properly autoscaled (min 1/max 5) with a real live ingress
+  and genuinely hot production traffic (see `edu_app_v2` row above). Migration
+  status/target (per user 2026-08-13: in progress, target is
+  `edu_app_platform_go`) is directionally still believed correct, but the
+  supporting evidence needs to be re-derived from live cluster state, not
+  static Helm config — not yet done for the `edu_platform`/`edu_platform_go`
+  or `edu_story`/`edu_story_go` pairs (both confirmed running simultaneously
+  in the `app` namespace, same dual-live risk as `edu_app_v2`).
 - **The "one context = one repo" starting assumption is confirmed broken for
   at least one pair.** `edu_app_v2` shares its actual database tables
   (`edu_app`, `edu_device`, `edu_global`, `edu_platform`, `edu_story`) with
