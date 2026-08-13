@@ -180,16 +180,24 @@ ecosystem looked like before the split, never migrated forward since.
 
   This is exactly the worst-case pattern flagged by the user: same domain,
   same underlying data (`edu_app`/`edu_app_v2` confirmed sharing DB tables —
-  see above), live traffic split by caller choice, not consolidated. At
-  least one concrete overlapping duplicate confirmed in code: `edu_app` has
-  its own `get-user-by-phone` route (`UserController@getUser`,
-  `routes/api.php:7`) identical in name to the one being hit continuously on
-  `edu_app_v2` — but `edu_app`'s copy showed zero hits in its own live pod
-  logs in the sampled window, meaning traffic hasn't actually split for
-  *this* route yet (code duplicated, cutover not done) rather than
-  currently serving simultaneously. Whether other routes across the three
-  pairs are truly split-serving (not just duplicated-but-dormant) is not
-  yet checked per-route.
+  see above), live traffic split by caller choice, not consolidated.
+  **CORRECTED 2026-08-13**: `edu_app` has its own `get-user-by-phone` route
+  (`UserController@getUser`, `routes/api.php:7`) identical in name to the
+  one on `edu_app_v2` — an initial small log sample showed zero hits on
+  `edu_app`'s copy and was wrongly reported as "dormant duplicate, cutover
+  not done." A larger sample (3000 lines) shows **`crm.monkey.edu.vn` calls
+  this exact endpoint directly on `edu_app` too** — genuinely split live
+  traffic on this route, not a dormant duplicate. (Log lines showed a
+  `Host: app.stg.monkeyuni.net` field that looked like a routing anomaly —
+  resolved: that's a stale hardcoded `ServerName app.stg.monkeyuni.net` in
+  `edu_app/service/vhost.conf:2`, unrelated to the actual client or
+  environment; the traffic is genuinely live, not staging.) CRM interaction
+  summary: CRM calls `edu_app_v2` heavily (the full `/user-account/*`
+  back-office toolkit — see `edu_app_v2/CONTEXT.md`) and calls `edu_app`
+  directly for at least `get-user-by-phone`; CRM shows **zero** traffic to
+  `edu_device` in the sampled window — no direct CRM↔`edu_device`
+  relationship found. Whether other routes across the three dual-live pairs
+  are similarly split is not yet checked per-route.
   - **Confirmed live caller still pointed at `edu_app_v2` directly**:
     `edu_lms_frontend`'s Tutoring production env —
     `REACT_APP_API_URL_APP_2=https://apii.monkeyuni.net/api/`
