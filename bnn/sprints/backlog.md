@@ -48,3 +48,11 @@ Source: `docs/components/iac-terraform-notes.md`, "Not yet done" section.
 - [ ] Consider renaming the replica set from `atlas-um8iyc-shard-0` — cosmetic, not urgent.
 - [ ] Turn `/mongo/prod/keyfile`'s SSM parameter into a real Terraform resource (placeholder value + `lifecycle { ignore_changes = [value] }`) instead of manually-created/Terraform-invisible.
 - [ ] Wire the `mongodb-prod.monkeyuni.net` private Route53 zone into actual connection strings (~29 Parameter Store keys, ~20-30 workload redeploys) — separate, larger rollout.
+
+## Adopt-on-touch imports (ADR-0001)
+
+Manually-managed existing infra to bring under Terraform, one at a time, per the adopt-on-touch policy — not a speculative bulk-import project.
+
+- [ ] Import existing `bastion-prod` EC2 instance into Terraform (see `docs/components/iac-terraform-notes.md`'s "If bastion-prod ever needs a real Terraform-managed change" section for the known real-vs-module config mismatches to reconcile first — AMI, instance type, key name, IAM profile).
+- [ ] Import existing dev EKS cluster into Terraform.
+- [ ] Import existing prod EKS cluster into Terraform (`monkey-eks`, currently `manual (eksctl)` per `docs/components/monkey-eks.md`).
