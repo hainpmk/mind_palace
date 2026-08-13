@@ -13,6 +13,6 @@ Focus: `monkeyuni.net` → Cloudflare public DNS migration. Full task list in `b
 
 ## Left, lower priority now (moved detail to backlog.md)
 - [ ] Add a DMARC record — found missing during mail-flow verification, pre-existing gap.
-- [ ] Decommission the old udag zone once stable.
+- [x] Decommission the old udag zone — decided: leave untouched (no API access, low importance now).
 
-Sprint's main goal (the migration itself) is done. Remaining items are small enough to just track in `backlog.md` going forward rather than needing their own sprint.
+Sprint's main goal (the migration itself) is done. Only DMARC remains — small enough to just track in `backlog.md` going forward rather than needing its own sprint.
