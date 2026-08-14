@@ -46,8 +46,8 @@ Source: `docs/components/iac-terraform-notes.md`, "Not yet done" section.
 
 - [ ] Move the AWS mongo node back to the private subnet (`prod-private-1a`) — remove the temporary `subnet_id` override in `envs/prod/main.tf`.
 - [ ] Release the temporary public IP / the now-obsolete `20.198.255.32/32` SG rule / the `/etc/hosts` self-reference workaround.
-- [ ] Formal Azure-side teardown: delete `vm-mongo-master`'s VM/disk/NSG resources (currently only deallocated).
-- [ ] Set up TLS in transit if a cross-cloud replication pattern recurs for the deferred `vm-core-database` migration.
+- [ ] Formal Azure-side teardown: delete `vm-mongo-master`'s VM/disk/NSG resources (currently only deallocated). Re-verified 2026-08-14 via `az vm list -d`/`az aks list`/`az network public-ip list`: entire Azure footprint now off - all 8 VMs deallocated (including `vm-mongo-master`, `vm-core-database`, `vm-core-service`), both AKS clusters' node pools stopped (`monkey-aks-live`, `onepercent-aks-v2`). LB/public-IP ARM objects still exist for the stopped AKS clusters (don't get deleted when node pools scale to 0), but nothing live behind them. Safe to actually delete whenever prioritized - blocked on scheduling the teardown work, not on confirming it's dead.
+- [ ] Set up TLS in transit if a cross-cloud replication pattern recurs for the deferred `vm-core-database` migration - also confirmed deallocated in the 2026-08-14 sweep above, same "safe to formally decommission whenever prioritized" status as `vm-mongo-master`.
 - [ ] Consider renaming the replica set from `atlas-um8iyc-shard-0` — cosmetic, not urgent.
 - [ ] Turn `/mongo/prod/keyfile`'s SSM parameter into a real Terraform resource (placeholder value + `lifecycle { ignore_changes = [value] }`) instead of manually-created/Terraform-invisible.
 - [ ] Wire the `mongodb-prod.monkeyuni.net` private Route53 zone into actual connection strings (~29 Parameter Store keys, ~20-30 workload redeploys) — separate, larger rollout.
