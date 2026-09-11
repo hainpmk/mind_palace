@@ -8,6 +8,7 @@ Working as a platform engineering team
 - Use ripgrep for grepping
 - User srcwalk skill when exploring source code
 - PR can be merge if all green, merged branch should be deleted
+- For long-running tasks, don't have to output the progress, only when tasks are done or blocked or need more clarification
 
 
 # Agents
