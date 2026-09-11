@@ -1,0 +1,30 @@
+{
+  "model": "sonnet",
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    }
+  },
+  "effortLevel": "medium",
+  "modelSettings": {
+    "claude-sonnet-5": {
+      "effortLevel": "high"
+    },
+    "claude-opus-5": {
+      "effortLevel": "high"
+    }
+  },
+  "tui": "fullscreen",
+  "theme": "auto",
+  "agentPushNotifEnabled": true,
+  "permissions": {
+    "defaultMode": "auto",
+    "additionalDirectories": [
+      "/home/monkey/Workspaces/src/github.com/eduhub123",
+      "/home/monkey/Workspaces/mind_palace"
+    ]
+  }
+}
