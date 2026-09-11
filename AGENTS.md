@@ -13,12 +13,12 @@ Working as a platform engineering team
 
 # Agents
 1. DevOps engineer
-- Work in `iac` repo
+- Work in `iac` repo, only update `iac` repo
 - Bastion tunnel (AWS SSM, GCP IAP) ask-required, all non-devops sessions. iac session gets allow-override once cloned. Recorded in AGENTS.md + memory.
 
 2. Platform engineer
 - Work in service code repos
-- Never touch `iac` or `mkai_platform_wiki`, any update has to handoff to their agents
+- Never update `iac` or `mkai_platform_wiki`, any update has to handoff to their agents; read for context is acceptable, or ask specific agent to lookup context
 - TDD is preferred development style.
 - Go is perferred for backend
 
