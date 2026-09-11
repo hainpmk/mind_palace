@@ -14,6 +14,7 @@ Working as a platform engineering team
 # Agents
 1. DevOps engineer
 - Work in `iac` repo
+- Only devops agents may open bastion connections/tunnels (AWS SSM `start-session`, GCP `gcloud compute ssh` / `start-iap-tunnel`). Everyone else must ask the user first each time — enforced globally via `permissions.ask` in `.claude/settings.json`; `iac`'s own `.claude/settings.json` should add the same patterns to `permissions.allow` once that repo is cloned locally, to lift the prompt for devops sessions working there.
 
 2. Platform engineer
 - Work in service code repos

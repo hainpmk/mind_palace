@@ -25,6 +25,11 @@
     "additionalDirectories": [
       "/home/monkey/Workspaces/src/github.com/eduhub123",
       "/home/monkey/Workspaces/mind_palace"
+    ],
+    "ask": [
+      "Bash(aws ssm start-session*)",
+      "Bash(gcloud compute start-iap-tunnel*)",
+      "Bash(gcloud compute ssh*)"
     ]
   }
 }
